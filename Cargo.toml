@@ -1,0 +1,41 @@
+[package]
+name = "system_tz"
+version = "0.1.0"
+description = "Current timezone from the operating system"
+edition = "2021"
+authors = ["b4D8 <hello@b4d8.fr>"]
+repository = "https://github.com/b4D8/system_tz"
+keywords = ["timezone", "iana", "olson"]
+categories = ["date-and-time", "os"]
+license = "Apache-2.0"
+
+[lib]
+name = "system_tz"
+path = "src/lib.rs"
+
+[[bin]]
+name = "system_tz"
+path = "src/bin.rs"
+
+[dependencies]
+chrono = "0.4.24"
+chrono-tz = { version = "0.8.2", features = ["serde", "case-insensitive"] }
+
+[target.'cfg(wasm)'.dependencies]
+js-sys = "0.3.61"
+
+[target.'cfg(windows)'.dependencies]
+thiserror = "1.0.40"
+once_cell = "1.17.1"
+windows = { version = "0.48.0", features = [
+    "Win32_Foundation",
+    "Win32_System_Time",
+] }
+
+[target.'cfg(windows)'.build-dependencies]
+chrono = "0.4.24"
+chrono-tz = { version = "0.8.2", features = ["serde", "case-insensitive"] }
+tokio = { version = "1.27.0", features = ["macros", "rt-multi-thread"] }
+reqwest = "0.11.16"
+serde = { version = "1.0.159", features = ["derive"] }
+quick-xml = { version = "0.28.1", features = ["serde", "serialize"] }

@@ -22,7 +22,7 @@ chrono = "0.4.24"
 chrono-tz = { version = "0.8.2", features = ["serde", "case-insensitive"] }
 
 [target.'cfg(target_family = "wasm")'.dependencies]
-js-sys = "0.3.52"
+js-sys = "0.3.61"
 
 [target.'cfg(target_family = "windows")'.dependencies]
 thiserror = "1.0.40"
@@ -37,5 +37,5 @@ chrono = "0.4.24"
 chrono-tz = { version = "0.8.2", features = ["serde", "case-insensitive"] }
 tokio = { version = "1.27.0", features = ["macros", "rt-multi-thread"] }
 reqwest = "0.11.16"
-serde = { version = "1.0.159", features = ["derive"] }
+serde = { version = "1.0.160", features = ["derive"] }
 quick-xml = { version = "0.28.1", features = ["serde", "serialize"] }

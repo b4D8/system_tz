@@ -1,6 +1,6 @@
 [package]
 name = "system_tz"
-version = "0.2.0"
+version = "0.3.0"
 description = "Current timezone from the operating system"
 edition = "2021"
 authors = ["b4D8 <hello@b4d8.fr>"]

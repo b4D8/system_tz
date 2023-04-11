@@ -1,7 +1,7 @@
 # system_tz
 
 [![Version](https://img.shields.io/crates/v/system_tz.svg)](https://crates.io/crates/system_tz)
-[![Documentation](https://img.shields.io/docsrs/system_tz)](https://docs.rs/system_tz/latest/system_tz)
+[![Documentation](https://img.shields.io/docsrs/system_tz)](https://docs.rs/system_tz)
 [![License](https://img.shields.io/crates/l/system_tz.svg)](https://github.com/b4D8/system_tz/blob/main/LICENSE)
 
 This utility crate provides a single trait `SystemTz` which exposes the `system_tz()`

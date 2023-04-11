@@ -21,7 +21,7 @@ which will print the timezone on invokation.
 
 ### Installation
 
-Refer to the [official documentation](https://www.rust-lang.org/en/learn/get-started)
+Refer to the [official documentation](https://www.rust-lang.org/learn/get-started)
 for installing the `cargo` package manager, and then run the following command
 from a terminal:
 
@@ -44,7 +44,7 @@ Contributions to the project are most welcome.
 In particular, **please let us known whether it works on your device**
 so we can improve the implementation.
 
-Pull requests imply agreement to the [Developer's certificate of origin (`DCO-1.1`) ](https://developercertificate.org/).
+Pull request require agreement to the [Developer's certificate of origin (`DCO-1.1`)](https://developercertificate.org/).
 
 ## Credits
 

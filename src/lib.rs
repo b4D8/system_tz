@@ -35,7 +35,7 @@
 //!
 //! ### Installation
 //!
-//! Refer to the [official documentation](https://www.rust-lang.org/en/learn/get-started)
+//! Refer to the [official documentation](https://www.rust-lang.org/learn/get-started)
 //! for installing the `cargo` package manager, and then run the following command
 //! from a terminal:
 //!
@@ -73,9 +73,6 @@
 #![warn(clippy::nursery)]
 #![warn(clippy::cargo)]
 
-#[cfg(windows)]
-include!(concat!(env!("OUT_DIR"), "/windows_zones.rs"));
-
 use chrono_tz::Tz;
 
 #[cfg(test)]
@@ -101,103 +98,7 @@ impl<T: AsRef<str>> AsTz for T {
     }
 }
 
-#[cfg(windows)]
-trait Utf16 {
-    #[must_use]
-    /// Tries to cast Windows UTF-16 to valid UTF-8.
-    fn as_utf8(&self) -> Option<String>;
-}
-
-#[cfg(windows)]
-impl Utf16 for [u16; 32] {
-    fn as_utf8(&self) -> Option<String> {
-        Some(String::from_utf16_lossy(self.split(|x| *x == 0).next()?))
-    }
-}
-
-#[cfg(windows)]
-mod windows_zone {
-    use super::*;
-
-    #[derive(Debug, Clone, thiserror::Error, PartialEq, Eq, PartialOrd, Ord, Hash)]
-    /// Errors of this crate.
-    pub enum Error {
-        #[error("Unknown timezone")]
-        UnknownTimezone,
-    }
-
-    struct WindowsZonesVersion {
-        pub build_date: chrono::DateTime<chrono::Utc>,
-        pub version: (&'static str, &'static str),
-        pub hash: u64,
-    }
-
-    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-    /// Known Microsoft Windows timezone.
-    pub struct WindowsTz {
-        zone: &'static str,
-        territory: Option<&'static str>,
-        iana: Vec<&'static str>,
-    }
-
-    impl WindowsTz {
-        #[must_use]
-        /// Returns a `WindowsTz` **only if it is registered in `WindowsZones` dataset**.
-        ///
-        /// If no `territory` is provided, returns the first known `WindowsTz`,
-        /// with a matching the `zone`.
-        pub fn get(zone: &str, territory: Option<&str>) -> Option<&'static Self> {
-            WINDOWS_ZONES.iter().find(|x| {
-                let res = x.zone == zone;
-                if territory.is_some() {
-                    res && x.territory == territory
-                } else {
-                    res
-                }
-            })
-        }
-
-        #[must_use]
-        /// Returns the build date of the bundled `WindowsZones` dataset.
-        pub fn build_date() -> chrono::DateTime<chrono::Utc> {
-            WINDOWS_ZONES_VERSION.build_date
-        }
-
-        #[must_use]
-        /// Returns the hash of the bundled `WindowsZones` dataset.
-        pub fn hash() -> u64 {
-            WINDOWS_ZONES_VERSION.hash
-        }
-
-        #[must_use]
-        /// Returns the version of the bundled `WindowsZones` dataset.
-        pub fn version() -> (&'static str, &'static str) {
-            WINDOWS_ZONES_VERSION.version
-        }
-    }
-
-    impl From<&WindowsTz> for Tz {
-        fn from(tz: &WindowsTz) -> Self {
-            tz.iana[0]
-                .parse()
-                .expect("Timezone validity checked while building data")
-        }
-    }
-
-    impl TryFrom<Tz> for WindowsTz {
-        type Error = Error;
-
-        fn try_from(tz: Tz) -> Result<Self, Self::Error> {
-            WINDOWS_ZONES
-                .iter()
-                .find(|x| x.iana.contains(&tz.name()))
-                .cloned()
-                .ok_or(Error::UnknownTimezone)
-        }
-    }
-}
-
-#[cfg(unix)]
+#[cfg(target_family = "unix")]
 impl<T: chrono::TimeZone> SystemTz for T {
     fn system_tz() -> Option<Tz> {
         ::std::env::var("TZ")
@@ -282,7 +183,107 @@ impl<T: chrono::TimeZone> SystemTz for T {
     }
 }
 
-#[cfg(windows)]
+#[cfg(target_family = "windows")]
+include!(concat!(env!("OUT_DIR"), "/windows_zones.rs"));
+
+#[cfg(target_family = "windows")]
+trait Utf16 {
+    #[must_use]
+    /// Tries to cast Windows UTF-16 to valid UTF-8.
+    fn as_utf8(&self) -> Option<String>;
+}
+
+#[cfg(target_family = "windows")]
+impl Utf16 for [u16; 32] {
+    fn as_utf8(&self) -> Option<String> {
+        Some(String::from_utf16_lossy(self.split(|x| *x == 0).next()?))
+    }
+}
+
+#[cfg(target_family = "windows")]
+#[derive(Debug, Clone, thiserror::Error, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Errors of this crate.
+pub enum Error {
+    #[error("Unknown timezone")]
+    UnknownTimezone,
+}
+
+#[cfg(target_family = "windows")]
+struct WindowsZonesVersion {
+    pub build_date: chrono::DateTime<chrono::Utc>,
+    pub version: (&'static str, &'static str),
+    pub hash: u64,
+}
+
+#[cfg(target_family = "windows")]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Known Microsoft Windows timezone.
+pub struct WindowsTz {
+    zone: &'static str,
+    territory: Option<&'static str>,
+    iana: Vec<&'static str>,
+}
+
+#[cfg(target_family = "windows")]
+impl WindowsTz {
+    #[must_use]
+    /// Returns a `WindowsTz` **only if it is registered in `WindowsZones` dataset**.
+    ///
+    /// If no `territory` is provided, returns the first known `WindowsTz`,
+    /// with a matching the `zone`.
+    pub fn get(zone: &str, territory: Option<&str>) -> Option<&'static Self> {
+        WINDOWS_ZONES.iter().find(|x| {
+            let res = x.zone == zone;
+            if territory.is_some() {
+                res && x.territory == territory
+            } else {
+                res
+            }
+        })
+    }
+
+    #[must_use]
+    /// Returns the build date of the bundled `WindowsZones` dataset.
+    pub fn build_date() -> chrono::DateTime<chrono::Utc> {
+        WINDOWS_ZONES_VERSION.build_date
+    }
+
+    #[must_use]
+    /// Returns the hash of the bundled `WindowsZones` dataset.
+    pub fn hash() -> u64 {
+        WINDOWS_ZONES_VERSION.hash
+    }
+
+    #[must_use]
+    /// Returns the version of the bundled `WindowsZones` dataset.
+    pub fn version() -> (&'static str, &'static str) {
+        WINDOWS_ZONES_VERSION.version
+    }
+}
+
+#[cfg(target_family = "windows")]
+impl From<&WindowsTz> for Tz {
+    fn from(tz: &WindowsTz) -> Self {
+        tz.iana[0]
+            .parse()
+            .expect("Timezone validity checked while building data")
+    }
+}
+
+#[cfg(target_family = "windows")]
+impl TryFrom<Tz> for WindowsTz {
+    type Error = Error;
+
+    fn try_from(tz: Tz) -> Result<Self, Self::Error> {
+        WINDOWS_ZONES
+            .iter()
+            .find(|x| x.iana.contains(&tz.name()))
+            .cloned()
+            .ok_or(Error::UnknownTimezone)
+    }
+}
+
+#[cfg(target_family = "windows")]
 impl<T: chrono::TimeZone> SystemTz for T {
     fn system_tz() -> Option<Tz> {
         use windows::Win32::System::Time::{GetTimeZoneInformation, TIME_ZONE_INFORMATION};
@@ -295,7 +296,7 @@ impl<T: chrono::TimeZone> SystemTz for T {
     }
 }
 
-#[cfg(wasm)]
+#[cfg(target_family = "wasm")]
 impl<T: chrono::TimeZone> SystemTz for T {
     fn system_tz() -> Option<Tz> {
         use {js_sys::Intl::DateTimeFormat, js_sys::Reflect};

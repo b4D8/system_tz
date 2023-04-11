@@ -21,10 +21,10 @@ path = "src/bin.rs"
 chrono = "0.4.24"
 chrono-tz = { version = "0.8.2", features = ["serde", "case-insensitive"] }
 
-[target.'cfg(wasm)'.dependencies]
-js-sys = "0.3.61"
+[target.'cfg(target_family = "wasm")'.dependencies]
+js-sys = "0.3.52"
 
-[target.'cfg(windows)'.dependencies]
+[target.'cfg(target_family = "windows")'.dependencies]
 thiserror = "1.0.40"
 once_cell = "1.17.1"
 windows = { version = "0.48.0", features = [
@@ -32,7 +32,7 @@ windows = { version = "0.48.0", features = [
     "Win32_System_Time",
 ] }
 
-[target.'cfg(windows)'.build-dependencies]
+[build-dependencies]
 chrono = "0.4.24"
 chrono-tz = { version = "0.8.2", features = ["serde", "case-insensitive"] }
 tokio = { version = "1.27.0", features = ["macros", "rt-multi-thread"] }

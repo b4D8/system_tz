@@ -1,4 +1,3 @@
-#[cfg(windows)]
 #[derive(serde::Deserialize, Hash)]
 #[serde(rename_all = "camelCase")]
 pub struct MapZone {
@@ -10,7 +9,6 @@ pub struct MapZone {
     pub iana: Vec<chrono_tz::Tz>,
 }
 
-#[cfg(windows)]
 #[derive(serde::Deserialize, Hash)]
 #[serde(rename_all = "camelCase")]
 struct MapTimezones {
@@ -22,7 +20,6 @@ struct MapTimezones {
     zones: Vec<MapZone>,
 }
 
-#[cfg(windows)]
 #[derive(serde::Deserialize, Hash)]
 #[serde(rename_all = "camelCase")]
 pub struct WindowsZones {
@@ -30,14 +27,12 @@ pub struct WindowsZones {
     timezones: MapTimezones,
 }
 
-#[cfg(windows)]
 #[derive(serde::Deserialize, Hash)]
 #[serde(rename_all = "camelCase")]
 pub struct WindowsZonesData {
     windows_zones: WindowsZones,
 }
 
-#[cfg(windows)]
 impl WindowsZonesData {
     const SOURCE: &'static str = "https://raw.githubusercontent.com/unicode-org/cldr/main/common/supplemental/windowsZones.xml";
 
@@ -78,7 +73,7 @@ impl WindowsZonesData {
         use std::io::Write;
         let msg = "Failed to write version to `BufWriter`";
 
-        //writeln!(f, "#[cfg(windows)]").expect(msg);
+        writeln!(f, "#[cfg(windows)]").expect(msg);
         writeln!(f, "/// Version of the bundled CLDR `WindowsZones` dataset").expect(msg);
         writeln!(
             f,
@@ -154,11 +149,9 @@ impl WindowsZonesData {
     }
 }
 
-#[cfg(windows)]
 #[tokio::main]
 async fn main() {
-    WindowsZonesData::get().await.build("windows_zones.rs")
+    if std::env::var("CARGO_CFG_WINDOWS").is_ok() {
+        WindowsZonesData::get().await.build("windows_zones.rs")
+    }
 }
-
-#[cfg(not(windows))]
-fn main() {}

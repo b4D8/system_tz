@@ -1,6 +1,6 @@
 [package]
 name = "system_tz"
-version = "0.3.0"
+version = "0.4.0"
 description = "Current timezone from the operating system"
 edition = "2021"
 authors = ["b4D8 <hello@b4d8.fr>"]
@@ -9,12 +9,22 @@ keywords = ["timezone", "iana", "olson"]
 categories = ["date-and-time", "os"]
 license = "Apache-2.0"
 
+[package.metadata.docs.rs]
+targets = [
+    "x86_64-unknown-linux-gnu",
+    "x86_64-apple-darwin",
+    "x86_64-pc-windows-msvc",
+    "i686-unknown-linux-gnu",
+    "i686-pc-windows-msvc",
+    "wasm32-unknonw-unknown",
+]
+
 [lib]
 name = "system_tz"
 path = "src/lib.rs"
 
 [[bin]]
-name = "system_tz"
+name = "tz"
 path = "src/bin.rs"
 
 [dependencies]
@@ -28,9 +38,9 @@ js-sys = "0.3.61"
 thiserror = "1.0.40"
 once_cell = "1.17.1"
 windows = { version = "0.48.0", features = [
+    "Globalization",
     "Win32_Foundation",
     "Win32_System_Time",
-    "Globalization",
 ] }
 
 [build-dependencies]

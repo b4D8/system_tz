@@ -1,3 +1,5 @@
+use ::std::{env, fs::File, io, path::Path};
+
 #[derive(serde::Deserialize, Hash)]
 #[serde(rename_all = "camelCase")]
 pub struct MapZone {
@@ -38,6 +40,8 @@ impl WindowsZonesData {
 
     /// Download latest dataset from `Self::SOURCE`.
     async fn get() -> Self {
+        use quick_xml::de::from_str;
+
         let request = reqwest::get(Self::SOURCE)
             .await
             .expect("Failed to GET Unicode CLDR data");
@@ -47,8 +51,7 @@ impl WindowsZonesData {
             .await
             .expect("Failed to decode UTF-8 from HTTP response");
 
-        let mut data: Self =
-            quick_xml::de::from_str(&response).expect("Failed to deserialize XML data");
+        let mut data: Self = from_str(&response).expect("Failed to deserialize XML data");
 
         for tz in [MapZone {
             zone: "Coordinated Universal Time".into(),
@@ -63,14 +66,17 @@ impl WindowsZonesData {
 
     /// Returns the hash of the downloaded dataset.
     fn hash(&self) -> u64 {
+        use ::std::hash::{Hash, Hasher};
+
         let mut state = std::collections::hash_map::DefaultHasher::new();
-        std::hash::Hash::hash(&self, &mut state);
-        std::hash::Hasher::finish(&state)
+        Hash::hash(&self, &mut state);
+        Hasher::finish(&state)
     }
 
     /// Writes the `WINDOWS_ZONES_VERSION` static containing metadata regarding build and dataset.
     fn _write_version(&self, f: &mut std::io::BufWriter<std::fs::File>) {
-        use std::io::Write;
+        use ::std::io::Write;
+
         let msg = "Failed to write version to `BufWriter`";
 
         writeln!(f, "#[cfg(windows)]").expect(msg);
@@ -83,7 +89,7 @@ impl WindowsZonesData {
         writeln!(f, "   WindowsZonesVersion {{",).expect(msg);
         writeln!(
             f,
-            "       build_date: {:?}.parse().expect(\"Invaild timestamp\"),",
+            "       build_date: {:?}.parse().ok(),",
             chrono::Utc::now().to_rfc3339()
         )
         .expect(msg);
@@ -93,12 +99,7 @@ impl WindowsZonesData {
             &self.windows_zones.timezones.other_version, &self.windows_zones.timezones.type_version,
         )
         .expect(msg);
-        writeln!(
-            f,
-            "       hash: \"{}\".parse().expect(\"Invalid hash integer\")",
-            self.hash()
-        )
-        .expect(msg);
+        writeln!(f, "       hash: \"{}\".parse().ok()", self.hash()).expect(msg);
         writeln!(f, "   }}",).expect(msg);
         writeln!(f, "}});",).expect(msg);
         writeln!(f).expect(msg);
@@ -106,7 +107,8 @@ impl WindowsZonesData {
 
     /// Writes a `WINDOWS_ZONES` static containing the downloaded data.
     fn _write_data(&self, f: &mut std::io::BufWriter<std::fs::File>) {
-        use std::io::Write;
+        use ::std::io::Write;
+
         let msg = "Failed to write data to `BufWriter`";
 
         //writeln!(f, "#[cfg(windows)]").expect(msg);
@@ -139,11 +141,11 @@ impl WindowsZonesData {
     }
 
     /// Writes downloaded data to `path`.
-    fn build<P: AsRef<std::path::Path>>(self, path: P) {
-        let out_dir = std::env::var("OUT_DIR").expect("Failed to get `OUT_DIR` env variable");
-        let out_path = std::path::Path::new(&out_dir).join(path.as_ref());
-        let target = std::fs::File::create(out_path).expect("Failed to create file");
-        let mut f = std::io::BufWriter::new(target);
+    fn build<P: AsRef<Path>>(self, path: P) {
+        let out_dir = env::var("OUT_DIR").expect("Failed to get `OUT_DIR` env variable");
+        let out_path = Path::new(&out_dir).join(path.as_ref());
+        let target = File::create(out_path).expect("Failed to create file");
+        let mut f = io::BufWriter::new(target);
         self._write_version(&mut f);
         self._write_data(&mut f);
     }
@@ -151,7 +153,7 @@ impl WindowsZonesData {
 
 #[tokio::main]
 async fn main() {
-    if std::env::var("CARGO_CFG_WINDOWS").is_ok() {
+    if env::var("CARGO_CFG_WINDOWS").is_ok() {
         WindowsZonesData::get().await.build("windows_zones.rs")
     }
 }

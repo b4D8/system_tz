@@ -8,13 +8,8 @@ This utility crate provides a single trait `SystemTz` which exposes the `system_
 method allowing to get the [timezone](https://en.wikipedia.org/wiki/Time_zone)
 from the operating system.
 
-Currently supported operating system families include `unix`, `windows` and `wasm`.
-
-Tested on:
-- Debian GNU/Linux (`bullseye`)
-- Windows 11 []
-
-Valid timezones are represented with [`chrono_tz::Tz`](https://docs.rs/chrono-tz/latest/chrono_tz/enum.Tz.html) based on [IANA Time Zone Database](https://www.iana.org/time-zones) (Olson names).
+Valid timezones are represented with [`chrono_tz::Tz`](https://docs.rs/chrono-tz/latest/chrono_tz/enum.Tz.html)
+based on [IANA Time Zone Database](https://www.iana.org/time-zones) (Olson names).
 
 On Microsoft Windows, because it uses of a special naming convention,
 the method relies on [`WindowsZones`](https://github.com/unicode-org/cldr/blob/main/common/supplemental/windowsZones.xml),
@@ -43,6 +38,14 @@ The interface doesn't require any argument.
 $ system_tz
 Europe/Paris
 ```
+
+## Support
+
+Should support the following operating system families: `unix`, `windows` and `wasm`.
+
+Successfully tested on:
+- 2023-04-11: Debian GNU/Linux 11 (bullseye)
+- 2023-04-11: Microsoft Windows 11
 
 ## Contribute
 

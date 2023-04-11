@@ -22,12 +22,6 @@
 //! method allowing to get the [timezone](https://en.wikipedia.org/wiki/Time_zone)
 //! from the operating system.
 //!
-//! Currently supported operating systems include `unix`, `windows` and `wasm`.
-//!
-//! Tested on:
-//! - 2023-04-11: Debian GNU/Linux `11 bullseye`
-//! - 2023-04-11: Microsoft Windows 11
-//!
 //! Valid timezones are represented with [`chrono_tz::Tz`](https://docs.rs/chrono-tz/latest/chrono_tz/enum.Tz.html)
 //! based on [IANA Time Zone Database](https://www.iana.org/time-zones) (Olson names).
 //!
@@ -58,6 +52,14 @@
 //! $ system_tz
 //! Europe/Paris
 //! ```
+//!
+//! ## Support
+//!
+//! Should support the following operating system families: `unix`, `windows` and `wasm`.
+//!
+//! Successfully tested on:
+//! - 2023-04-11: Debian GNU/Linux 11 (bullseye)
+//! - 2023-04-11: Microsoft Windows 11
 //!
 //! ## Contribute
 //!

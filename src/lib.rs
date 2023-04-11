@@ -22,9 +22,14 @@
 //! method allowing to get the [timezone](https://en.wikipedia.org/wiki/Time_zone)
 //! from the operating system.
 //!
-//! Currently supported operating system families include `unix` (Linux, MacOs), `windows` and `wasm`.
+//! Currently supported operating systems include `unix`, `windows` and `wasm`.
 //!
-//! Valid timezones are represented with [`chrono_tz::Tz`](https://docs.rs/chrono-tz/latest/chrono_tz/enum.Tz.html) based on [IANA Time Zone Database](https://www.iana.org/time-zones) (Olson names).
+//! Tested on:
+//! - 2023-04-11: Debian GNU/Linux `11 bullseye`
+//! - 2023-04-11: Microsoft Windows 11
+//!
+//! Valid timezones are represented with [`chrono_tz::Tz`](https://docs.rs/chrono-tz/latest/chrono_tz/enum.Tz.html)
+//! based on [IANA Time Zone Database](https://www.iana.org/time-zones) (Olson names).
 //!
 //! On Microsoft Windows, because it uses of a special naming convention,
 //! the method relies on [`WindowsZones`](https://github.com/unicode-org/cldr/blob/main/common/supplemental/windowsZones.xml),
@@ -199,6 +204,13 @@ impl Utf16 for [u16; 32] {
 }
 
 #[cfg(target_family = "windows")]
+impl Utf16 for [u16; 128] {
+    fn as_utf8(&self) -> Option<String> {
+        Some(String::from_utf16_lossy(self.split(|x| *x == 0).next()?))
+    }
+}
+
+#[cfg(target_family = "windows")]
 #[derive(Debug, Clone, thiserror::Error, PartialEq, Eq, PartialOrd, Ord, Hash)]
 /// Errors of this crate.
 pub enum Error {
@@ -231,11 +243,11 @@ impl WindowsTz {
     /// with a matching the `zone`.
     pub fn get(zone: &str, territory: Option<&str>) -> Option<&'static Self> {
         WINDOWS_ZONES.iter().find(|x| {
-            let res = x.zone == zone;
+            let zone = x.zone == zone;
             if territory.is_some() {
-                res && x.territory == territory
+                zone && x.territory == territory
             } else {
-                res
+                zone
             }
         })
     }
@@ -284,13 +296,28 @@ impl TryFrom<Tz> for WindowsTz {
 #[cfg(target_family = "windows")]
 impl<T: chrono::TimeZone> SystemTz for T {
     fn system_tz() -> Option<Tz> {
-        use windows::Win32::System::Time::{GetTimeZoneInformation, TIME_ZONE_INFORMATION};
-        // Reference: https://learn.microsoft.com/en-us/windows/win32/api/timezoneapi/nf-timezoneapi-gettimezoneinformation
-        let mut tz = TIME_ZONE_INFORMATION::default();
-        let exit_code = unsafe { GetTimeZoneInformation(&mut tz) };
-        (0..3)
-            .contains(&exit_code)
-            .then_some(WindowsTz::get(&tz.StandardName.as_utf8()?, None)?.into())
+        use ::windows::{
+            Globalization,
+            Win32::System::Time::{GetDynamicTimeZoneInformation, DYNAMIC_TIME_ZONE_INFORMATION},
+        };
+        Calendar::new()
+            .ok()
+            .and_then(|cal| {
+                cal.GetTimeZone()
+                    .ok()
+                    .and_then(|tz| tz.to_string_lossy().as_tz())
+            })
+            .or_else(|| {
+                // Reference: https://learn.microsoft.com/en-us/windows/win32/api/timezoneapi/nf-timezoneapi-gettimezoneinformation
+                let mut zone = DYNAMIC_TIME_ZONE_INFORMATION::default();
+                if let 0 | 1 | 2 = unsafe { GetDynamicTimeZoneInformation(&mut zone) } {
+                    zone.TimeZoneKeyName
+                        .as_utf8()
+                        .and_then(|zone| WindowsTz::get(&zone, None).map(std::convert::Into::into))
+                } else {
+                    None
+                }
+            })
     }
 }
 
